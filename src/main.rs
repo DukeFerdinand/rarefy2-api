@@ -1,4 +1,4 @@
-mod query_impl;
+mod tables;
 mod state;
 
 use actix_web::{
@@ -9,6 +9,7 @@ use mysql_async::{prelude::*, Pool};
 use serde::Serialize;
 
 use state::AppState;
+use tables::accounts::AccountsManager;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Account {
@@ -52,7 +53,9 @@ async fn echo(req_body: String) -> impl Responder {
 
 #[get("/accounts")]
 async fn get_accounts(state: web::Data<AppState>) -> impl Responder {
-    match query_impl::query_accounts(state).await {
+    let acc_manager = AccountsManager::from_app_state(state);
+
+    match acc_manager.query_accounts().await {
         Ok(acc) => {
             let json = to_json(acc).unwrap();
             HttpResponse::Ok()
