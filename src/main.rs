@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, middleware::{Logger, self}};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, middleware};
 use mysql_async::{prelude::*, Pool};
 
 struct AppState {
@@ -39,11 +39,14 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenvy::dotenv().unwrap();
-
     // Init using RUST_LOG, or all info level events if the env var is not set
     // The string given to default_filter_or is the same format as the env var
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
+
+    match dotenvy::dotenv() {
+        Ok(_) => log::info!("Loaded .env"),
+        Err(_) => log::warn!("Could not load .env! If this is expected please ignore this warning :)")
+    }
 
     HttpServer::new(|| {
         let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL not found in env!");
